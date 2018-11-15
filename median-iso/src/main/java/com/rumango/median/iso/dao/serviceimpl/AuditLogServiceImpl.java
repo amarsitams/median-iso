@@ -169,48 +169,14 @@ public class AuditLogServiceImpl implements AuditLogService {
 		}
 	}
 
-	private byte[] isoToByteArray(ISOMsg isoMessage, String version) {
-		try {
-			if (version.equalsIgnoreCase("87")) {
-				packager87 = new ISO87APackager();
-				isoMessage.setPackager(packager87);
-				return isoMessage.pack();
-			} else {
-				packager93 = new ISO93APackager();
-				isoMessage.setPackager(packager93);
-				return isoMessage.pack();
-			}
-		} catch (ISOException e) {
-			return null;
-		}
-	}
-
-	private byte[] isoSplitted(ISOMsg isoMessage, String message) {
-		StringBuilder sb = new StringBuilder();
-		try {
-			sb.append("MTI : " + isoMessage.getMTI());
-			for (int i = 1; i <= isoMessage.getMaxField(); i++) {
-				if (isoMessage.hasField(i)) {
-					if (i == 2 && isPCIMask) {
-						sb.append(",  " + i + ": " + mask(isoMessage.getString(i)));
-					} else
-						sb.append(",  " + i + ": " + isoMessage.getString(i));
-				}
-			}
-			logger.info(message + sb);
-			byte[] response = sb.toString().getBytes();
-			logger.info("response in byte array " + new String(response));
-			return response;
-		} catch (ISOException e) {
-			logger.error("Exception occured" + e.getMessage());
-			return null;
-		}
-	}
-
 	private String mask(String accNo) {
 		StringBuilder sb = new StringBuilder(accNo);
-		sb.replace(6, accNo.length(), "X");
-		return sb.toString();
+		if (sb.length() > 6) {
+			sb.replace(6, accNo.length(), "X");
+			return sb.toString();
+		} else
+			return sb.toString();
+
 	}
 
 	@Override
@@ -265,4 +231,42 @@ public class AuditLogServiceImpl implements AuditLogService {
 	public List<AuditLog> getAllLogs() {
 		return (List<AuditLog>) auditLogRepository.findAll();
 	}
+
+//	private byte[] isoToByteArray(ISOMsg isoMessage, String version) {
+//	try {
+//		if (version.equalsIgnoreCase("87")) {
+//			packager87 = new ISO87APackager();
+//			isoMessage.setPackager(packager87);
+//			return isoMessage.pack();
+//		} else {
+//			packager93 = new ISO93APackager();
+//			isoMessage.setPackager(packager93);
+//			return isoMessage.pack();
+//		}
+//	} catch (ISOException e) {
+//		return null;
+//	}
+//}
+//
+//private byte[] isoSplitted(ISOMsg isoMessage, String message) {
+//	StringBuilder sb = new StringBuilder();
+//	try {
+//		sb.append("MTI : " + isoMessage.getMTI());
+//		for (int i = 1; i <= isoMessage.getMaxField(); i++) {
+//			if (isoMessage.hasField(i)) {
+//				if (i == 2 && isPCIMask) {
+//					sb.append(",  " + i + ": " + mask(isoMessage.getString(i)));
+//				} else
+//					sb.append(",  " + i + ": " + isoMessage.getString(i));
+//			}
+//		}
+//		logger.info(message + sb);
+//		byte[] response = sb.toString().getBytes();
+//		logger.info("response in byte array " + new String(response));
+//		return response;
+//	} catch (ISOException e) {
+//		logger.error("Exception occured" + e.getMessage());
+//		return null;
+//	}
+//}
 }
