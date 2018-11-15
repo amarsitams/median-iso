@@ -46,7 +46,7 @@ public class ServerDetailsController {
 
 	@GetMapping("/getdetail/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public ServerDetails getServerDetails(@PathParam("id") int id) {
+	public ServerDetails getServerDetails(@PathParam("id") Integer id) {
 		return serverDetailsService.getDetailsById(id);
 	}
 }

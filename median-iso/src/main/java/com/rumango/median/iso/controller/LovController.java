@@ -46,7 +46,7 @@ public class LovController {
 
 	@GetMapping("/getlovvalues/{fieldNumber}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<String> getLovValues(@PathParam("fieldNumber") int fieldNumber) {
+	public List<String> getLovValues(@PathParam("fieldNumber") Integer fieldNumber) {
 		return lovService.getAllRules(fieldNumber);
 	}
 }

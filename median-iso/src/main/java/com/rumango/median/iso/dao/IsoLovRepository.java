@@ -9,11 +9,11 @@ import org.springframework.stereotype.Repository;
 import com.rumango.median.iso.entity.LovRule;
 
 @Repository
-public interface IsoLovRepository extends CrudRepository<LovRule, Integer> {
+public interface IsoLovRepository extends CrudRepository<LovRule, Long> {
 
-	List<LovRule> findByFieldNumber(int fieldNumber);
+	List<LovRule> findByFieldNumber(Integer fieldNumber);
 
-	default List<String> getStringValues(int fieldNumber) {
+	default List<String> getStringValues(Integer fieldNumber) {
 		List<LovRule> lovRules = findByFieldNumber(fieldNumber);
 		List<String> stringList = new LinkedList<>();
 		for (LovRule rule : lovRules) {

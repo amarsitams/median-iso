@@ -46,7 +46,7 @@ public class RulesController {
 
 	@GetMapping("/get87rule/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public IsoRule getRule(@PathParam("id") int id) {
+	public IsoRule getRule(@PathParam("id") Integer id) {
 		return iso87RulesService.findByFieldNumber(id);
 	}
 

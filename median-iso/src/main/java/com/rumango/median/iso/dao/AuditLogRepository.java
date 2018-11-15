@@ -15,7 +15,7 @@ public interface AuditLogRepository extends CrudRepository<AuditLog, Long> {
 //
 //	Optional<AuditLog> findById(Integer id);
 
-	@Query("select a from AuditLog a where a.id = ?1")
-	AuditLog findFromId(Integer id);
+	@Query(value = "select a from AuditLog a where a.id = ?1", nativeQuery = true)
+	public AuditLog findFromId(Integer id);
 
 }

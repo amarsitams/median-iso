@@ -183,8 +183,8 @@ public class GetResponseImpl implements GetResponse {
 	private String getResponse(String isoMessage) throws Exception {
 		logger.info("inside getResponse of IsoMessageConvertionImpl");
 		try {
-			// response = clientSocket.run(isoMessage);
-			response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
+			response = clientSocket.run(isoMessage);
+			//response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
 			// clientSocket.setValues();
 			// clientSocket.setValues(10000, true, "192.0.0.0", 2112);
 			//

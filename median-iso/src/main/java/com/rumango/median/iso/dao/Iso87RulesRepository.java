@@ -7,7 +7,7 @@ import com.rumango.median.iso.entity.IsoRule;
 
 @Repository
 public interface Iso87RulesRepository extends CrudRepository<IsoRule, Long> {
-	IsoRule findById(int id);
+	IsoRule findById(Integer id);
 
-	IsoRule findByFieldNumber(int fieldNumber);
+	IsoRule findByFieldNumber(Integer fieldNumber);
 }

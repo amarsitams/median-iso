@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.rumango.median.iso.entity.ServerDetails;
 
 @Repository
-public interface ServerDetailsRepository extends CrudRepository<ServerDetails, Integer> {
-	ServerDetails findById(int id);
+public interface ServerDetailsRepository extends CrudRepository<ServerDetails, Long> {
+	ServerDetails findById(Integer id);
 }

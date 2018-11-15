@@ -6,7 +6,7 @@
 
 	<groupId>com.rumango.median.iso</groupId>
 	<artifactId>medianiso</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0</version>
 	<packaging>jar</packaging>
 
 	<name>median-iso</name>
@@ -132,6 +132,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
-
+	
 </project>
