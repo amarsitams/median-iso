@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import com.rumango.median.iso.service.IsoConvertor;
+import com.rumango.median.iso.service.GetResponse;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -15,11 +15,11 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private final static Logger logger = Logger.getLogger(ServerHandler.class);
-	private IsoConvertor convertor;
+	private GetResponse convertor;
 	private String uuid;
 	private Map<String, String> map = new LinkedHashMap<>();
 
-	public ServerHandler(IsoConvertor convertor) {
+	public ServerHandler(GetResponse convertor) {
 		this.convertor = convertor;
 	}
 

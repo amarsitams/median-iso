@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 
 import com.rumango.median.iso.dao.service.AuditLogService;
 import com.rumango.median.iso.service.ConvertIsoVersions;
-import com.rumango.median.iso.service.IsoConvertor;
+import com.rumango.median.iso.service.GetResponse;
 import com.rumango.median.iso.socket.client.ClientSocketForSwitch;
 
 @Service
-public class IsoConvertorImpl implements IsoConvertor {
+public class GetResponseImpl implements GetResponse {
 
 	private String modifiedRequestString, originalResponseString, modifiedResponseString, response;
 	private ISOMsg originalRequestISOMsg, modifiedRequestISOMsg, originalResponseISOMsg, modifiedResponseISOMsg;
@@ -36,7 +36,7 @@ public class IsoConvertorImpl implements IsoConvertor {
 	@Autowired
 	private AuditLogService auditLogService;
 
-	private final static Logger logger = Logger.getLogger(IsoConvertorImpl.class);
+	private final static Logger logger = Logger.getLogger(GetResponseImpl.class);
 
 	public String convertAndRespond(String stringMessage, Map<String, String> map) {
 		logger.info("inside convertAndRespond of IsoMessageConvertor ");
@@ -187,17 +187,9 @@ public class IsoConvertorImpl implements IsoConvertor {
 			response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
 			// clientSocket.setValues();
 			// clientSocket.setValues(10000, true, "192.0.0.0", 2112);
-			// response =
-			// "0210F23A801F0AA08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024
-			// 00000000 00000000 00000000 000000000694040076836527891294CAN00001test
-			// 84001620182018201820180850201001";
-			// response =
-			// "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024
-			// 00000000 00000000 00000000 0000000006940400768365278912CAN00001test
-			// 84001620182018201820180850201001";
 			//
 		} catch (Exception e) {
-			// response = "";
+			response = "";
 			sentMsgStatus = "Exception while getResponse of IsoMessageConvertionImpl";
 			logger.warn(sentMsgStatus);
 			throw e;
@@ -226,7 +218,8 @@ public class IsoConvertorImpl implements IsoConvertor {
 
 	private String mask(String accNo) {
 		StringBuilder sb = new StringBuilder(accNo);
-		sb.replace(6, accNo.length(), "X");
+		if (sb.length() > 6)
+			sb.replace(6, accNo.length(), "X");
 		return sb.toString();
 	}
 

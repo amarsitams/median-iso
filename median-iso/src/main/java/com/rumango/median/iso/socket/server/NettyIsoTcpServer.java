@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.rumango.median.iso.dao.ServerDetailsRepository;
 import com.rumango.median.iso.entity.ServerDetails;
-import com.rumango.median.iso.service.IsoConvertor;
+import com.rumango.median.iso.service.GetResponse;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
@@ -34,7 +34,7 @@ public class NettyIsoTcpServer implements InitializingBean {
 	private ServerDetails serverDetails;
 
 	@Autowired
-	private IsoConvertor isoConvertor;
+	private GetResponse getResponse;
 
 	@Autowired
 	private ServerDetailsRepository serverDetailsRepository;
@@ -59,7 +59,7 @@ public class NettyIsoTcpServer implements InitializingBean {
 				pipeline.addLast("idleStateHandler", new IdleStateHandler(0, 0, 0));
 				pipeline.addLast(new IsoMessageEncoder());
 				pipeline.addLast(new IsoMessageDecoder());
-				pipeline.addLast(group, "serverHandler", new ServerHandler(isoConvertor));
+				pipeline.addLast(group, "serverHandler", new ServerHandler(getResponse));
 			}
 		});
 
