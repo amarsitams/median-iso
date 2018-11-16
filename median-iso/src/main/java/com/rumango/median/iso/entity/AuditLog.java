@@ -12,7 +12,7 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @Entity
-@Table(name = "abc_median_audit_log")
+@Table(name = "median_audit_log")
 @JsonAutoDetect
 public class AuditLog {
 	@Id

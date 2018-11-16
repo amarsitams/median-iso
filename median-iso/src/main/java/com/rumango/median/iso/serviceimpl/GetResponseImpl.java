@@ -44,17 +44,19 @@ public class GetResponseImpl implements GetResponse {
 		// logger.info("originalRequestString in byte []" + stringMessage.getBytes());
 		try {
 			// originalRequestString = stringMessage;
-			modifiedRequestString = convertRequest(stringMessage);
-			logger.info(" modifiedRequestString " + modifiedRequestString);
-			map.put("modifiedRequestString", modifiedRequestString);
+//			modifiedRequestString = convertRequest(stringMessage);
+//			logger.info(" modifiedRequestString " + modifiedRequestString);
+//			map.put("modifiedRequestString", modifiedRequestString);
+//
+//			originalResponseString = getResponse(modifiedRequestString);
+//			logger.info("originalResponseString  " + originalResponseString);
+//			map.put("originalResponseString", originalResponseString);
+//
+//			modifiedResponseString = convertResponse(originalResponseString);
+			modifiedResponseString = getResponse(stringMessage);
 
-			originalResponseString = getResponse(modifiedRequestString);
-			logger.info("originalResponseString  " + originalResponseString);
-			map.put("originalResponseString", originalResponseString);
-
-			modifiedResponseString = convertResponse(originalResponseString);
-			logger.info(" modifiedResponseString " + modifiedResponseString);
-			map.put("modifiedResponseString", modifiedResponseString);
+//			logger.info(" modifiedResponseString " + modifiedResponseString);
+//			map.put("modifiedResponseString", modifiedResponseString);
 		} catch (Exception e) {
 			modifiedResponseString = "";
 			logger.warn("Exception inside convertAndRespond of IsoMessageConvertor ", e);
@@ -70,6 +72,7 @@ public class GetResponseImpl implements GetResponse {
 			}
 		}
 		return modifiedResponseString;
+
 	}
 
 	private ISOMsg unpackMessage(String stringMessage, String isoVersion)
@@ -184,7 +187,8 @@ public class GetResponseImpl implements GetResponse {
 		logger.info("inside getResponse of IsoMessageConvertionImpl");
 		try {
 			response = clientSocket.run(isoMessage);
-			//response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
+			if (response == null)
+				response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
 			// clientSocket.setValues();
 			// clientSocket.setValues(10000, true, "192.0.0.0", 2112);
 			//

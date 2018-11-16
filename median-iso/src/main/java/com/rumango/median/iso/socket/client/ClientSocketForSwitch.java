@@ -29,9 +29,9 @@ public class ClientSocketForSwitch {// implements DisposableBean implements Init
 	private String message;
 	private Socket socket;
 	private ServerDetails serverDetails;
-	
+
 	@Autowired
-	private ServerDetailsRepository  serverDetailsRepository;
+	private ServerDetailsRepository serverDetailsRepository;
 
 	private final static Logger logger = Logger.getLogger(ClientSocketForSwitch.class);
 
@@ -41,7 +41,7 @@ public class ClientSocketForSwitch {// implements DisposableBean implements Init
 		this.host = host;
 		this.port = port;
 	}
-	
+
 	public void setValues() {
 		serverDetails = serverDetailsRepository.findById(1);
 		this.maxResponseWaitingTime = 40000;
@@ -100,11 +100,10 @@ public class ClientSocketForSwitch {// implements DisposableBean implements Init
 				logger.info("Received Message is:" + recievedMessage);
 				return recievedMessage;
 			}
-		} catch (Exception exception) {
-			logger.info("exception in run of ClientSocketForSwitch" + exception.getMessage());
-			exception.printStackTrace();
+		} catch (Exception e) {
+			logger.info("exception in run of ClientSocketForSwitch", e);
 			return null;
-		} 
+		}
 //		finally {
 //			close();
 //		}

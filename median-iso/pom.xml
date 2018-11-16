@@ -28,6 +28,13 @@
 
 	<dependencies>
 
+		<!-- https://mvnrepository.com/artifact/net.sf.j8583/j8583 -->
+		<dependency>
+			<groupId>net.sf.j8583</groupId>
+			<artifactId>j8583</artifactId>
+			<version>1.5.3</version>
+		</dependency>
+
 		<!-- https://mvnrepository.com/artifact/io.netty/netty-all -->
 		<dependency>
 			<groupId>io.netty</groupId>

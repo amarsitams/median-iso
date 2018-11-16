@@ -5,11 +5,9 @@ import java.time.Year;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.ISO87APackager;
 import org.jpos.iso.packager.ISO93APackager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rumango.median.iso.service.ConvertIsoVersions;
-import com.rumango.median.iso.service.ValidationUtil;
 
 @Service
 public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
@@ -17,8 +15,8 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 	private ISO93APackager packager93;
 	private ISO87APackager packager87;
 
-	@Autowired
-	private ValidationUtil validations;
+//	@Autowired
+//	private ValidationUtil validations;
 
 	@Override
 	public ISOMsg iso93TO87(ISOMsg isoMsg) {
@@ -37,7 +35,7 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 					isoMessage.set(0, builderTemp.toString());
 					break;
 				case 3:
-					isoMessage.set(i, String.format("%6s", validations.validate(i, isoMessage.getString(i))));
+					//isoMessage.set(i, String.format("%6s", validations.validate(i, isoMessage.getString(i))));
 					break;
 				// 012 new IFA_NUMERIC ( 6, "TIME, LOCAL TRANSACTION"),
 				case 12:
@@ -74,12 +72,12 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 					break;
 				// 028 new IFA_AMOUNT ( 9, "AMOUNT, TRANSACTION FEE")
 				case 28:
-					isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
+					//isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
 					// isoMessage.unset(i);
 					break;
 				// 029 new IFA_AMOUNT ( 9, "AMOUNT, SETTLEMENT FEE")
 				case 29:
-					isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
+					//isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
 					// isoMessage.unset(i);
 					break;
 				// 030 new IFA_AMOUNT ( 9, "AMOUNT, TRANSACTION PROCESSING FEE")

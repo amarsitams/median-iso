@@ -9,7 +9,7 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @Entity
-@Table(name = "system_iso87_lov")
+@Table(name = "median_iso_lov")
 @JsonAutoDetect
 public class LovRule {
 

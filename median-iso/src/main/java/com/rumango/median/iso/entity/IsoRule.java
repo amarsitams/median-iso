@@ -11,7 +11,7 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @Entity
-@Table(name = "system_iso_rule")
+@Table(name = "median_iso_rule")
 @JsonAutoDetect
 public class IsoRule {
 
