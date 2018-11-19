@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import com.rumango.median.iso.dao.service.AuditLogService;
 import com.rumango.median.iso.service.ConvertIsoVersions;
 import com.rumango.median.iso.service.GetResponse;
+import com.rumango.median.iso.socket.client.BCPosting;
 import com.rumango.median.iso.socket.client.ClientSocketForSwitch;
 
 @Service
@@ -32,6 +33,9 @@ public class GetResponseImpl implements GetResponse {
 
 	@Autowired
 	private ClientSocketForSwitch clientSocket;
+
+//	@Autowired
+//	private IsoPosting isoPosting;
 
 	@Autowired
 	private AuditLogService auditLogService;
@@ -53,7 +57,9 @@ public class GetResponseImpl implements GetResponse {
 //			map.put("originalResponseString", originalResponseString);
 //
 //			modifiedResponseString = convertResponse(originalResponseString);
-			modifiedResponseString = getResponse(stringMessage);
+			// modifiedResponseString = getResponse(stringMessage);
+			//modifiedResponseString = isoPosting.start(isoPosting, unpackMessage(stringMessage, "93"));
+			BCPosting.main();
 
 //			logger.info(" modifiedResponseString " + modifiedResponseString);
 //			map.put("modifiedResponseString", modifiedResponseString);
