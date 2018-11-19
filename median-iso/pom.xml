@@ -19,13 +19,6 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
-	</properties>
-
 	<dependencies>
 
 		<!-- https://mvnrepository.com/artifact/net.sf.j8583/j8583 -->
@@ -137,9 +130,8 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.8.0</version>
 				<configuration>
-					<fork>true</fork>
-					<executable>/usr/lib/jvm/java-8-openjdk-amd64/</executable>
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
