@@ -1,6 +1,7 @@
 package com.rumango.median.iso.dao;
 
-import org.springframework.data.jpa.repository.Query;
+import java.util.List;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,7 +16,11 @@ public interface AuditLogRepository extends CrudRepository<AuditLog, Long> {
 //
 //	Optional<AuditLog> findById(Integer id);
 
-	@Query(value = "select a from AuditLog a where a.id = ?1", nativeQuery = true)
-	public AuditLog findFromId(Integer id);
+	//@Query(value = "select * from median_audit_log a where a.request_ip = ?1", nativeQuery = true)
+	public List<AuditLog> findById(int id);
+
+	// @Query(value = "select * from median_audit_log a where a.id = ?1",
+	// nativeQuery = true)
+	List<AuditLog> findByIpAddress(String id);
 
 }

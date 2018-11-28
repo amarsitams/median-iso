@@ -1,4 +1,4 @@
-package com.rumango.median.iso.socket.server;
+package com.rumango.median.iso.server;
 
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
@@ -15,27 +15,30 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	private final static Logger logger = Logger.getLogger(ServerHandler.class);
-	private GetResponse convertor;
+	private GetResponse getResponse;
 	private String uuid;
 	private Map<String, String> map = new LinkedHashMap<>();
 
 	public ServerHandler(GetResponse convertor) {
-		this.convertor = convertor;
+		this.getResponse = convertor;
 	}
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 		logger.info("inside channelRead of server handler : ");
+		String response;
 		try {
 			String strIP = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress().getHostAddress();
 			map.put("IP", strIP);
 			logger.info("IP " + strIP);
-			IsoMessage isoMessage = (IsoMessage) msg;
+			StringIsoMessage isoMessage = (StringIsoMessage) msg;
 			uuid = UUID.randomUUID().toString();
 			map.put("uuid", uuid);
 			logger.info("input iso msg: " + isoMessage.getStr());
-			String response = convertor.convertAndRespond(isoMessage.getStr(), map);
+			// response = getResponse.convertAndRespond(test(), map);
+			response = getResponse.convertAndRespond(isoMessage.getStr(), map);
 			String sendMessage = getTcpHeader(response.length()) + response;
+			logger.info("Response :" + sendMessage);
 			isoMessage.setStr(sendMessage);
 			ctx.write(isoMessage);
 			ctx.flush();
@@ -53,7 +56,6 @@ public class ServerHandler extends ChannelInboundHandlerAdapter {
 
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-		// Close the connection when an exception is raised.
 		cause.printStackTrace();
 		ctx.close();
 	}

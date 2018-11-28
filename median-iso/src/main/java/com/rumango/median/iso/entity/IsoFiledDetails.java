@@ -10,16 +10,13 @@ import javax.persistence.Table;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
 @Entity
-@Table(name = "median_iso_field_types")
+@Table(name = "median_iso_field_details")
 @JsonAutoDetect
-public class IsoFiledTypes {
+public class IsoFiledDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
-
-	@Column(name = "field_number")
-	private int fieldNumber;
 
 	@Column(name = "message_type")
 	private String messageType;
@@ -27,12 +24,20 @@ public class IsoFiledTypes {
 	@Column(name = "message_version")
 	private String messageVersion;
 
+	@Column(name = "field_number")
+	private int fieldNumber;
+
 	@Column(name = "data_type")
 	private String dataType;
 
-	@Column(name = "field_length")
-	private int fieldLength;
+	@Column(name = "data_length")
+	private int dataLength;
+
+	@Column(name = "field_description")
+	private int fieldDescription;
 
 	// Msg_Type, Msg_Version, Fields, DataType, Data_Length
+	// Msg_Type, Msg_Version, Fields, DataType, Data_Length
+	// Msg_Type => ISO-8583 , Msg_Version => 1993
 
 }

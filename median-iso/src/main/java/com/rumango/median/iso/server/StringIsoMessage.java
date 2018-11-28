@@ -1,8 +1,8 @@
-package com.rumango.median.iso.socket.server;
+package com.rumango.median.iso.server;
 
 import java.nio.charset.StandardCharsets;
 
-public class IsoMessage {
+public class StringIsoMessage {
 	private String str;
 
 	public byte[] toByteArray() {

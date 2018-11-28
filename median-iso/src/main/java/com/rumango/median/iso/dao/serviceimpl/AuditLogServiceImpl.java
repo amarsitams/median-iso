@@ -28,6 +28,51 @@ public class AuditLogServiceImpl implements AuditLogService {
 	@Autowired
 	private AuditLogRepository auditLogRepository;
 
+	@Override
+	@Transactional
+	public void saveData(Map<String, String> statusMap) {
+		logger.info(" Inside save data ");
+		try {
+			AuditLog auditLog = new AuditLog();
+			auditLog.setTimeStamp(new Timestamp(System.currentTimeMillis()));
+			auditLog.setIpAddress(statusMap.containsKey("IP") ? statusMap.get("IP") : null);
+			auditLog.setExternalSystemName(
+					statusMap.containsKey("externalSystemName") ? statusMap.get("externalSystemName") : null);
+			auditLog.setMedianUuid(statusMap.containsKey("uuid") ? statusMap.get("uuid") : null);
+			auditLog.setRequestStatus(
+					statusMap.containsKey("receivedMsgStatus") ? statusMap.get("receivedMsgStatus") : "FAIL");
+			auditLog.setResponseStatus(
+					statusMap.containsKey("sentMsgStatus") ? statusMap.get("sentMsgStatus") : "FAIL");
+			auditLog.setReason(statusMap.containsKey("reason") ? statusMap.get("reason") : "");
+			auditLog.setOriginal_request(
+					statusMap.containsKey("originalRequestString") ? statusMap.get("originalRequestString") : null);
+
+//			auditLog.setModified_request_isomsg(
+//					statusMap.containsKey("modifiedRequestString") ? statusMap.get("modifiedRequestString") : null);
+			auditLog.setOriginal_response_isomsg(
+					statusMap.containsKey("originalResponseString") ? statusMap.get("originalResponseString") : null);
+//			auditLog.setModified_response_isomsg(
+//					statusMap.containsKey("modifiedResponseString") ? statusMap.get("modifiedResponseString") : null);
+//
+//			auditLog.setOriginal_request_splitted(statusMap.containsKey("originalRequestString")
+//					? splittedString(statusMap.get("originalRequestString"), "93")
+//					: null);
+//			auditLog.setModified_request_splitted(statusMap.containsKey("modifiedRequestString")
+//					? splittedString(statusMap.get("modifiedRequestString"), "87")
+//					: null);
+//			auditLog.setOriginal_response_splitted(statusMap.containsKey("originalResponseString")
+//					? splittedString(statusMap.get("originalResponseString"), "87")
+//					: null);
+//			auditLog.setModified_response_splitted(statusMap.containsKey("modifiedResponseString")
+//					? splittedString(statusMap.get("modifiedResponseString"), "93")
+//					: null);
+			auditLogRepository.save(auditLog);
+			logger.info(auditLog.toString());
+		} catch (Exception e) {
+			logger.error("Exception while saving  data ", e);
+		}
+	}
+
 	// Modified for postgre sql
 	@Transactional
 	public void saveData(ISOMsg originalRequestISOMsg, ISOMsg modifiedRequestISOMsg, ISOMsg originalResponseISOMsg,
@@ -41,6 +86,7 @@ public class AuditLogServiceImpl implements AuditLogService {
 			log.setRequestStatus(
 					statusMap.containsKey("receivedMsgStatus") ? statusMap.get("receivedMsgStatus") : "FAIL");
 			log.setResponseStatus(statusMap.containsKey("sentMsgStatus") ? statusMap.get("sentMsgStatus") : "FAIL");
+
 			log.setOriginal_request(originalRequestISOMsg == null ? statusMap.get("originalRequestISOMsg")
 					: isoToString(originalRequestISOMsg, "93"));
 			log.setModified_request_isomsg(
@@ -180,56 +226,18 @@ public class AuditLogServiceImpl implements AuditLogService {
 	}
 
 	@Override
-	@Transactional
-	public void saveData(Map<String, String> statusMap) {
-		logger.info(" Inside save data ");
-		try {
-			AuditLog auditLog = new AuditLog();
-			auditLog.setTimeStamp(new Timestamp(System.currentTimeMillis()));
-			auditLog.setIpAddress(statusMap.containsKey("IP") ? statusMap.get("IP") : null);
-			auditLog.setExternalSystemName(
-					statusMap.containsKey("externalSystemName") ? statusMap.get("externalSystemName") : null);
-			auditLog.setMedianUuid(statusMap.containsKey("uuid") ? statusMap.get("uuid") : null);
-			auditLog.setRequestStatus(
-					statusMap.containsKey("receivedMsgStatus") ? statusMap.get("receivedMsgStatus") : "FAIL");
-			auditLog.setResponseStatus(
-					statusMap.containsKey("sentMsgStatus") ? statusMap.get("sentMsgStatus") : "FAIL");
-			auditLog.setOriginal_request(
-					statusMap.containsKey("originalRequestString") ? statusMap.get("originalRequestString") : null);
-			auditLog.setModified_request_isomsg(
-					statusMap.containsKey("modifiedRequestString") ? statusMap.get("modifiedRequestString") : null);
-			auditLog.setOriginal_response_isomsg(
-					statusMap.containsKey("originalResponseString") ? statusMap.get("originalResponseString") : null);
-			auditLog.setModified_response_isomsg(
-					statusMap.containsKey("modifiedResponseString") ? statusMap.get("modifiedResponseString") : null);
-
-			auditLog.setOriginal_request_splitted(statusMap.containsKey("originalRequestString")
-					? splittedString(statusMap.get("originalRequestString"), "93")
-					: null);
-			auditLog.setModified_request_splitted(statusMap.containsKey("modifiedRequestString")
-					? splittedString(statusMap.get("modifiedRequestString"), "87")
-					: null);
-			auditLog.setOriginal_response_splitted(statusMap.containsKey("originalResponseString")
-					? splittedString(statusMap.get("originalResponseString"), "87")
-					: null);
-			auditLog.setModified_response_splitted(statusMap.containsKey("modifiedResponseString")
-					? splittedString(statusMap.get("modifiedResponseString"), "93")
-					: null);
-			auditLogRepository.save(auditLog);
-			logger.info(auditLog.toString());
-		} catch (Exception e) {
-			logger.info("Exception while saving  data ", e);
-		}
-	}
-
-	@Override
 	public AuditLog findById(int id) {
-		return auditLogRepository.findFromId(id);
+		return auditLogRepository.findByIpAddress("192.168.1.4").get(0);
 	}
 
 	@Override
 	public List<AuditLog> getAllLogs() {
 		return (List<AuditLog>) auditLogRepository.findAll();
+	}
+
+	@Override
+	public AuditLog findByIp(String ip) {
+		return auditLogRepository.findByIpAddress(ip).get(0);
 	}
 
 //	private byte[] isoToByteArray(ISOMsg isoMessage, String version) {

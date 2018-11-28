@@ -13,6 +13,8 @@ public interface AuditLogService {
 	public void saveData(Map<String, String> statusMap);
 	
 	public AuditLog findById(int id);
+	
+	public AuditLog findByIp(String ip);
 
 	public List<AuditLog> getAllLogs();
 }

@@ -1,7 +1,10 @@
 package com.rumango.median.iso.serviceimpl;
 
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -9,76 +12,141 @@ import javax.validation.constraints.NotNull;
 import org.apache.log4j.Logger;
 import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
+import org.jpos.iso.packager.GenericPackager;
 import org.jpos.iso.packager.ISO87APackager;
 import org.jpos.iso.packager.ISO93APackager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.rumango.median.iso.client.IsoJposResponse;
+import com.rumango.median.iso.client.RestCall;
 import com.rumango.median.iso.dao.service.AuditLogService;
-import com.rumango.median.iso.service.ConvertIsoVersions;
+import com.rumango.median.iso.model.ValidateChannel;
+import com.rumango.median.iso.service.ConvertIso;
 import com.rumango.median.iso.service.GetResponse;
-import com.rumango.median.iso.socket.client.BCPosting;
-import com.rumango.median.iso.socket.client.ClientSocketForSwitch;
 
 @Service
 public class GetResponseImpl implements GetResponse {
 
-	private String modifiedRequestString, originalResponseString, modifiedResponseString, response;
-	private ISOMsg originalRequestISOMsg, modifiedRequestISOMsg, originalResponseISOMsg, modifiedResponseISOMsg;
+	private String originalRequestString, modifiedRequestString, originalResponseString, modifiedResponseString, reason;
+	private ISOMsg originalRequestISOMsg, modifiedRequestISOMsg, originalResponseISOMsg, modifiedResponseISOMsg,
+			response = null;
 	private String receivedMsgStatus, sentMsgStatus;
 	private ISO93APackager packager93;
 	private ISO87APackager packager87;
+	private GenericPackager genericPackager = null;
 	@Autowired
-	private ConvertIsoVersions convertIsoVersions;
-
-	@Autowired
-	private ClientSocketForSwitch clientSocket;
-
-//	@Autowired
-//	private IsoPosting isoPosting;
+	private ConvertIso convertIsoVersions;
 
 	@Autowired
 	private AuditLogService auditLogService;
 
 	private final static Logger logger = Logger.getLogger(GetResponseImpl.class);
 
-	public String convertAndRespond(String stringMessage, Map<String, String> map) {
-		logger.info("inside convertAndRespond of IsoMessageConvertor ");
-		map.put("originalRequestString", stringMessage);
-		// logger.info("originalRequestString in byte []" + stringMessage.getBytes());
-		try {
-			// originalRequestString = stringMessage;
-//			modifiedRequestString = convertRequest(stringMessage);
-//			logger.info(" modifiedRequestString " + modifiedRequestString);
-//			map.put("modifiedRequestString", modifiedRequestString);
-//
-//			originalResponseString = getResponse(modifiedRequestString);
-//			logger.info("originalResponseString  " + originalResponseString);
-//			map.put("originalResponseString", originalResponseString);
-//
-//			modifiedResponseString = convertResponse(originalResponseString);
-			// modifiedResponseString = getResponse(stringMessage);
-			//modifiedResponseString = isoPosting.start(isoPosting, unpackMessage(stringMessage, "93"));
-			BCPosting.main();
+	private Map<String, String> arrayToMap(String[] arrayOfString) {
+		return Arrays.asList(arrayOfString).stream().map(str -> str.split(":"))
+				.collect(Collectors.toMap(str -> str[0], str -> str[1]));
+	}
 
-//			logger.info(" modifiedResponseString " + modifiedResponseString);
-//			map.put("modifiedResponseString", modifiedResponseString);
+	private boolean validate(ISOMsg isoMsg) {
+		boolean response = false;
+		ValidateChannel vc = null;
+		try {
+			logger.info("Calling rest call to validate ");
+			String channel = isoMsg == null ? "Channel Id Invalid" : isoMsg.getString(2);
+			String tXiD = isoMsg == null ? "Transaction Id Invalid" : isoMsg.getString(125);
+			logger.info("Channel Id :" + channel + " Transaction Id : " + tXiD);
+			if (!channel.equalsIgnoreCase("Channel Id Invalid") && channel != null
+					&& !tXiD.equalsIgnoreCase("Transaction Id Invalid") && tXiD != null)
+				vc = RestCall.callRestApi(channel, tXiD);
+			logger.info("ValidateChannel " + vc);
+			logger.info("Amount " + isoMsg.getString(4) + "  Account Number" + isoMsg.getString(102));
+			if (vc.getStatus().startsWith("00")) {
+				if (vc.getAmount() == Long.parseLong(isoMsg.getString(4))) {
+					if (vc.getAccountNumber().equalsIgnoreCase(isoMsg.getString(102)))
+						response = true;
+					else {
+						response = false;
+						reason = "Account number do not match";
+					}
+				} else {
+					response = false;
+					reason = "Amount do not match";
+				}
+			} else {
+				response = false;
+				reason = "Status not 00";
+			}
 		} catch (Exception e) {
-			modifiedResponseString = "";
-			logger.warn("Exception inside convertAndRespond of IsoMessageConvertor ", e);
+			logger.error("Exception in validate", e);
+			response = false;
+		}
+		return response;
+	}
+
+	private ISOMsg getIsoFromString(String message) {
+		ISOMsg msg = new ISOMsg();
+		try {
+			String[] splitted = message.split(";");
+			for (Map.Entry<String, String> entry : arrayToMap(splitted).entrySet()) {
+				msg.set(Integer.parseInt(entry.getKey()), entry.getValue());
+			}
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return null;
+		}
+		return msg;
+	}
+
+	public String convertAndRespond(String stringMessage, Map<String, String> map) {
+		ISOMsg msg = null;
+		ISOMsg isoMsg = null;
+		String response = null;
+		try {
+			map.put("originalRequestString", stringMessage);
+			isoMsg = getIsoFromString(stringMessage);
+			logISOMsg(isoMsg, "REQUEST");
+			receivedMsgStatus = "SUCCESS";
+		} catch (Exception e) {
+			receivedMsgStatus = "FAIL";
+			logger.error("Exception while unpacking", e);
+		}
+		logger.info("inside convertAndRespond of GetResponseImpl ");
+		try {
+			if (validate(isoMsg)) {
+				isoMsg.setPackager(getPackager());
+				Object[] objArray = IsoJposResponse.main(isoMsg);
+				logger.info("objArray size ::" + objArray.length);
+				response = (String) objArray[0];
+				map.put("originalResponseString", response);
+				logger.info("response ::" + response);
+				msg = (ISOMsg) objArray[1];
+				if (msg != null) {
+					logISOMsg(msg, "RESPONSE");
+					sentMsgStatus = "SUCCESS";
+				}
+			} else {
+				logger.info("Validation failed with rest Api");
+				sentMsgStatus = "FAIL";
+				map.put("reason", reason);
+			}
+		} catch (Exception e) {
+			logger.error("Exception inside convertAndRespond of GetResponseImpl ", e);
 		} finally {
 			map.put("receivedMsgStatus", receivedMsgStatus);
 			map.put("sentMsgStatus", sentMsgStatus);
 			logger.info("receivedMsgStatus " + receivedMsgStatus + " received Response Status   " + sentMsgStatus);
 			try {
-				// auditLogService.saveData(isoMap, statusMap);
+				logger.info("Map Size" + map.size());
+				for (Map.Entry<String, String> set : map.entrySet()) {
+					logger.info(set.getKey() + ":" + set.getValue());
+				}
 				auditLogService.saveData(map);
 			} catch (Exception e) {
 				logger.warn("Exception while saving log information ", e);
 			}
 		}
-		return modifiedResponseString;
-
+		return msg == null ? reason : msg.getString(39);
 	}
 
 	private ISOMsg unpackMessage(String stringMessage, String isoVersion)
@@ -88,9 +156,13 @@ public class GetResponseImpl implements GetResponse {
 			if (isoVersion.equalsIgnoreCase("87")) {
 				packager87 = new ISO87APackager();
 				isoMsg.setPackager(packager87);
-			} else if (isoVersion.equalsIgnoreCase("93")) {
+			}
+			if (isoVersion.equalsIgnoreCase("93")) {
 				packager93 = new ISO93APackager();
 				isoMsg.setPackager(packager93);
+			} else {
+				genericPackager = getPackager();
+				isoMsg.setPackager(genericPackager);
 			}
 			isoMsg.unpack(stringMessage.getBytes("US-ASCII"));// "US-ASCII"
 			return isoMsg;
@@ -104,25 +176,30 @@ public class GetResponseImpl implements GetResponse {
 		if (isoVersion.equalsIgnoreCase("87")) {
 			packager87 = new ISO87APackager();
 			isoMessage.setPackager(packager87);
-		} else {
+		}
+		if (isoVersion.equalsIgnoreCase("93")) {
 			packager93 = new ISO93APackager();
 			isoMessage.setPackager(packager93);
+		} else {
+			genericPackager = getPackager();
+			isoMessage.setPackager(genericPackager);
 		}
 		byte[] binaryImage = isoMessage.pack();
 		return new String(binaryImage);
 	}
 
-	private ISOMsg updateRequestIso(ISOMsg isoMessage) {
+	private ISOMsg validateRequest(ISOMsg isoMessage) {
 		try {
 			// isoMessage.set(49, "840");
-			return convertIsoVersions.iso93TO87(isoMessage);
+			// return convertIsoVersions.iso93TO87(isoMessage);
+			return isoMessage;
 		} catch (Exception e) {
 			logger.warn("Exception while updateRequestIso ", e);
 		}
 		return null;
 	}
 
-	private ISOMsg updateResponseIso(ISOMsg isoMessage) {
+	private ISOMsg validateResponse(ISOMsg isoMessage) {
 		try {
 			// isoMessage.set(49, "826");
 			return convertIsoVersions.iso87TO93(isoMessage);
@@ -140,20 +217,18 @@ public class GetResponseImpl implements GetResponse {
 			if (requestMsg == null | requestMsg == "")
 				throw new Exception("Request message invalid");
 			originalRequestISOMsg = unpackMessage(requestMsg, "93");
-			// isoMap.put("originalRequestISOMsg", originalRequestISOMsg);
 			logISOMsg(originalRequestISOMsg, "original Request message");
+
 			// read and convert
 			if (originalRequestISOMsg != null)
-				modifiedRequestISOMsg = updateRequestIso(originalRequestISOMsg);
-			// isoMap.put("modifiedRequestISOMsg", modifiedRequestISOMsg);
+				modifiedRequestISOMsg = validateRequest(originalRequestISOMsg);
+
 			logISOMsg(modifiedRequestISOMsg, "modified Request message");
-			// pack
-			if (modifiedRequestISOMsg != null)
-				stringMessage = packMessage(modifiedRequestISOMsg, "87");
+
 		} catch (Exception e) {
 			stringMessage = "";
 			receivedMsgStatus = "FAIL";
-			logger.warn(" Exception while converting request iso message ");
+			logger.error(" Exception while converting request iso message ", e);
 			throw e;
 		}
 		if (stringMessage != "" && stringMessage != null)
@@ -167,13 +242,13 @@ public class GetResponseImpl implements GetResponse {
 			// unpack
 			if (responseMsg == null | responseMsg == "")
 				throw new Exception("Response message invalid");
-			originalResponseISOMsg = unpackMessage(responseMsg, "87");
+			originalResponseISOMsg = unpackMessage(responseMsg, "gp");
 			// logger.info("original_response_isomsg.toString()" + new
 			// String(originalResponseISOMsg.pack()));
 			logISOMsg(originalResponseISOMsg, "original response iso message");
 			// isoMap.put("originalResponseISOMsg", originalResponseISOMsg);
 			// read and convert
-			modifiedResponseISOMsg = updateResponseIso(originalResponseISOMsg);
+			modifiedResponseISOMsg = validateResponse(originalResponseISOMsg);
 			// isoMap.put("modifiedResponseISOMsg", modifiedResponseISOMsg);
 			logISOMsg(modifiedResponseISOMsg, "modified response message");
 			// pack
@@ -189,41 +264,36 @@ public class GetResponseImpl implements GetResponse {
 		return stringMessage;
 	}
 
-	private String getResponse(String isoMessage) throws Exception {
+	private ISOMsg getResponse(ISOMsg isoMessage) throws Exception {
 		logger.info("inside getResponse of IsoMessageConvertionImpl");
 		try {
-			response = clientSocket.run(isoMessage);
-			if (response == null)
-				response = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
-			// clientSocket.setValues();
-			// clientSocket.setValues(10000, true, "192.0.0.0", 2112);
-			//
+			response = null;// new IsoJposResponse().call(isoMessage);
 		} catch (Exception e) {
-			response = "";
+			response = null;
 			sentMsgStatus = "Exception while getResponse of IsoMessageConvertionImpl";
 			logger.warn(sentMsgStatus);
 			throw e;
 		}
-		if (response != "" && response != null)
+		if (response.toString() != "" && response != null)
 			sentMsgStatus = "SUCCESS";
 		return response;
 	}
 
 	private void logISOMsg(@NotEmpty @NotNull ISOMsg msg, String stringMessage) {
+		// StringBuilder responseString = new StringBuilder();
 		try {
 			logger.info("-----------------" + stringMessage + "-----------------------");
-			logger.info("  MTI : " + msg.getMTI());
-			for (int i = 1; i <= msg.getMaxField(); i++) {
+			for (int i = 0; i <= msg.getMaxField(); i++) {
 				if (msg.hasField(i)) {
-					if (i == 2)
-						logger.info(i + " " + " : " + mask(msg.getString(i)));
-					else
-						logger.info(i + " " + " : " + msg.getString(i));
+					// responseString =
+					// responseString.append(i).append(":").append(msg.getString(i)).append(";");
+					logger.info(i + " " + ":" + msg.getString(i));
 				}
 			}
-		} catch (ISOException e) {
-			logger.error("Exception occured" + e.getMessage());
+		} catch (Exception e) {
+			logger.error("Exception occured", e);
 		}
+		// return responseString.toString();
 	}
 
 	private String mask(String accNo) {
@@ -233,4 +303,58 @@ public class GetResponseImpl implements GetResponse {
 		return sb.toString();
 	}
 
+	private GenericPackager getPackager() {
+		try {
+			ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+			InputStream inputstream = classLoader.getResourceAsStream("basic.xml");
+			genericPackager = new GenericPackager(inputstream);
+			return genericPackager;
+		} catch (ISOException e) {
+			logger.error("Exception while loading Generic Packager", e);
+			return null;
+		}
+	}
+
+//	public String convertAndRespond(ISOMsg input, Map<String, String> map) {
+//		ISOMsg msg = null;
+//		ISOMsg isoMsg = null;
+//		String response = null;
+//		try {
+//			isoMsg = input;
+//			logISOMsg(isoMsg, "ORIGINAL MESSAGE");
+//
+//			isoMsg.setPackager(getPackager());
+//			isoMsg.pack();
+//
+//			logISOMsg(isoMsg, "GENERIC MESSAGE");
+//		} catch (ISOException e) {
+//			logger.error("Exception while unpacking", e);
+//		}
+//		logger.info("inside convertAndRespond of GetResponseImpl ");
+//		try {
+//			if (validate(isoMsg)) {
+//				isoMsg.setPackager(getPackager());
+//				Object[] objArray = IsoJposResponse.main(isoMsg);
+//				logger.info("objArray size ::" + objArray.length);
+//				response = (String) objArray[0];
+//				logger.info("response ::" + response);
+//				msg = (ISOMsg) objArray[1];
+//				if (msg != null)
+//					logISOMsg(msg, "RESPONSE MESSAGE");
+//			} else
+//				logger.info("Validation failed with rest Api");
+//		} catch (Exception e) {
+//			logger.error("Exception inside convertAndRespond of GetResponseImpl ", e);
+//		} finally {
+//			map.put("receivedMsgStatus", receivedMsgStatus);
+//			map.put("sentMsgStatus", sentMsgStatus);
+//			logger.info("receivedMsgStatus " + receivedMsgStatus + " received Response Status   " + sentMsgStatus);
+//			try {
+//				auditLogService.saveData(map);
+//			} catch (Exception e) {
+//				logger.warn("Exception while saving log information ", e);
+//			}
+//		}
+//		return msg == null ? "ERROR" : msg.getString(39);
+//	}
 }

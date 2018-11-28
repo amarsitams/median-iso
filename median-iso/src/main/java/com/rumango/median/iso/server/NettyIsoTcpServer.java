@@ -1,4 +1,4 @@
-package com.rumango.median.iso.socket.server;
+package com.rumango.median.iso.server;
 
 import java.io.IOException;
 

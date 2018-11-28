@@ -1,4 +1,4 @@
-package com.rumango.median.iso.socket.client;
+package com.rumango.median.iso.client;
 
 import java.io.BufferedWriter;
 import java.io.InputStream;

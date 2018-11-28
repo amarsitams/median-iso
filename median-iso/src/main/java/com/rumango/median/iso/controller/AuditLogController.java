@@ -2,13 +2,13 @@ package com.rumango.median.iso.controller;
 
 import java.util.List;
 
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -40,9 +40,16 @@ public class AuditLogController {
 		return (List<AuditLog>) auditLogService.getAllLogs();
 	}
 
+	@GetMapping("/getlogip/{ip}")
+	@Produces(MediaType.APPLICATION_JSON)
+	public AuditLog getLogByIp(@PathVariable("ip") String ip) {
+		return auditLogService.findByIp(ip);
+	}
+
 	@GetMapping("/getlog/{id}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public AuditLog getRule(@PathParam("id") Integer id) {
+	public AuditLog getLogById(@PathVariable("id") Integer id) {
+		System.out.println("ID :" + id);
 		return auditLogService.findById(id);
 	}
 }

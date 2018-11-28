@@ -1,26 +1,97 @@
-package com.rumango.median.iso.serviceimpl;
+package com.rumango.median.iso.test;
 
 import java.time.Year;
 
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
+
+import org.jpos.iso.ISOException;
 import org.jpos.iso.ISOMsg;
 import org.jpos.iso.packager.ISO87APackager;
 import org.jpos.iso.packager.ISO93APackager;
-import org.springframework.stereotype.Service;
 
-import com.rumango.median.iso.service.ConvertIsoVersions;
+public class From93To87 {
 
-@Service
-public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
+	public static ISOMsg unpackMessage(String stringMessage, String isoVersion) {
+		try {
+			ISOMsg isoMsg = new ISOMsg();
+			if (isoVersion.equalsIgnoreCase("87")) {
+				ISO87APackager packager = new ISO87APackager();
+				isoMsg.setPackager(packager);
+			} else if (isoVersion.equalsIgnoreCase("93")) {
+				ISO93APackager packager = new ISO93APackager();
+				isoMsg.setPackager(packager);
+			}
+			isoMsg.unpack(stringMessage.getBytes("US-ASCII"));
+			return isoMsg;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-	private ISO93APackager packager93;
-	private ISO87APackager packager87;
+	public static void logISOMsg(@NotEmpty @NotNull ISOMsg msg, String stringMessage) {
+		System.out.println("-----------------" + stringMessage + "-----------------------");
+		// System.out.println(" MTI : " + msg.getMTI() + msg.getString(0));
+		for (int i = 0; i <= msg.getMaxField(); i++) {
+			if (msg.hasField(i)) {
+				System.out.println(i + " " + " : " + msg.getString(i));
+			}
+		}
+	}
 
-//	@Autowired
-//	private ValidationUtil validations;
+	private static String packMessage(ISOMsg isoMessage, String version) {
+		try {
+			if (version.equalsIgnoreCase("87")) {
+				ISO87APackager packager = new ISO87APackager();
+				isoMessage.setPackager(packager);
+			} else {
+				ISO93APackager packager = new ISO93APackager();
+				isoMessage.setPackager(packager);
+			}
+			byte[] binaryImage = isoMessage.pack();
+			return new String(binaryImage);
+		} catch (ISOException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
 
-	@Override
-	public ISOMsg iso93TO87(ISOMsg isoMsg) {
-		ISOMsg isoMessage = isoMsg;
+	public static void main(String[] args) throws ISOException {
+
+//		String iso93 = "1200FA3A800108E080000000000004000000061234560000110000000123450000000043111102155116000001181102155116181118110211020812312312232         123     2132           0533122003169876543210123456";
+//		ISOMsg msg = unpackMessage(iso93, "93");
+//		logISOMsg(msg, "---------93-----------");
+//		ISOMsg msg87 = iso93TO87(msg);
+//		logISOMsg(msg87, "---------87-----------");
+//		System.out.println(packMessage(msg87, "87"));
+//		
+//		
+//		ISOMsg msg93 = iso87TO93(msg87);
+//		logISOMsg(msg93, "---------93-----------");
+//		System.out.println(packMessage(msg93, "93"));
+
+//		String iso87 = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
+//		String iso87 = "0200F23A801F08A08010000000000400000014940400502010010100000000000020001024154319000001154319102410241024 00000000 00000000 00000000 0000000006940400768365278912CAN00001test                                    84001620182018201820180850201001";
+//		ISOMsg msg2 = unpackMessage(iso87, "87");
+//		System.out.println(new String(msg2.pack()));
+//		logISOMsg(msg2, "---------87-----------");
+
+//		String iso93 = "1652909800096123010000000000000000000200000000600511201811130950422018111320006006827831714600511000000000000001166005131300600040CAFE EXPRESS>BURLINGTON               US15000404D000000000000000000000000D000000000000000040400404D000000000000000000000000D000000000000000040400404D000000000000000000000000D0000000000000000404N M  16AC1015001106001003SWT";
+//		// ISOMsg msg93 = iso93TO87(iso93);
+//		ISOMsg msg2 = unpackMessage(iso93, "93");
+//		logISOMsg(msg2, "---------93-----------");
+//		System.out.println(packMessage(msg2, "93"));
+
+//		StringBuilder builderTemp;
+//		String strTemp = "1200";
+//		builderTemp = new StringBuilder(strTemp);
+//		builderTemp.setCharAt(0, '0');// ("0", 0, 1);//replace(1, 1, strTemp).toString();
+//		System.out.println(builderTemp);
+
+	}
+
+	public static ISOMsg iso93TO87(ISOMsg isoMessage) {
 		int len;
 		StringBuilder builderTemp;
 		String strTemp, iso12 = "";
@@ -34,17 +105,11 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 					builderTemp.setCharAt(0, '0');
 					isoMessage.set(0, builderTemp.toString());
 					break;
-				case 3:
-					//isoMessage.set(i, String.format("%6s", validations.validate(i, isoMessage.getString(i))));
-					break;
 				// 012 new IFA_NUMERIC ( 6, "TIME, LOCAL TRANSACTION"),
 				case 12:
 					strTemp = isoMessage.getString(i);
 					iso12 = strTemp;
-					if (strTemp.length() > 6)
-						isoMessage.set(12, strTemp.substring(6));
-					else
-						isoMessage.set(12, strTemp);
+					isoMessage.set(12, isoMessage.getString(i).substring(6));
 					break;
 				// 013 new IFA_NUMERIC ( 4, "DATE, LOCAL TRANSACTION"),
 				case 13:
@@ -72,13 +137,11 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 					break;
 				// 028 new IFA_AMOUNT ( 9, "AMOUNT, TRANSACTION FEE")
 				case 28:
-					//isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
-					// isoMessage.unset(i);
+					isoMessage.unset(i);
 					break;
 				// 029 new IFA_AMOUNT ( 9, "AMOUNT, SETTLEMENT FEE")
 				case 29:
-					//isoMessage.set(i, String.format("%9s", validations.validate(i, isoMessage.getString(i))));
-					// isoMessage.unset(i);
+					isoMessage.unset(i);
 					break;
 				// 030 new IFA_AMOUNT ( 9, "AMOUNT, TRANSACTION PROCESSING FEE")
 				case 30:
@@ -87,10 +150,6 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 				// 031 new IFA_AMOUNT ( 9, "AMOUNT, SETTLEMENT PROCESSING FEE")
 				case 31:
 					isoMessage.unset(i);
-					break;
-				case 32:
-					// isoMessage.set(i, String.format("%11s", validations.validate(i,
-					// isoMessage.getString(i))));
 					break;
 				// 039 new IF_CHAR ( 2, "RESPONSE CODE")
 				case 39:
@@ -126,11 +185,6 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 //						isoMessage.set(44, strTemp);
 					break;
 
-				case 49:
-					// isoMessage.set(i, String.format("%3s", validations.validate(i,
-					// isoMessage.getString(i))));
-					// isoMessage.unset(i);
-					break;
 				case 53:
 					isoMessage.unset(i);
 					break;
@@ -242,15 +296,10 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 				}
 			}
 		}
-		packager87 = new ISO87APackager();
-		isoMessage.setPackager(packager87);
 		return isoMessage;
-
 	}
 
-	@Override
-	public ISOMsg iso87TO93(ISOMsg isoMsg) {
-		ISOMsg isoMessage = isoMsg;
+	public static ISOMsg iso87TO93(ISOMsg isoMessage) {
 		int year = Year.now().getValue() % 100;
 		StringBuilder builderTemp;
 		String strTemp, iso12 = "";
@@ -297,7 +346,8 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 					break;
 				// 028 new IFA_AMOUNT ( 9, "AMOUNT, TRANSACTION FEE")
 				case 28:
-					isoMessage.unset(i);
+					isoMessage.set(i, isoMessage.getString(i).substring(0, 6));
+					// isoMessage.unset(i);
 					break;
 				// 029 new IFA_AMOUNT ( 9, "AMOUNT, SETTLEMENT FEE")
 				case 29:
@@ -445,8 +495,6 @@ public class ConvertIsoVersionsIMpl implements ConvertIsoVersions {
 				}
 			}
 		}
-		packager93 = new ISO93APackager();
-		isoMessage.setPackager(packager93);
 		return isoMessage;
 	}
 

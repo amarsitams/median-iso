@@ -31,12 +31,15 @@ public class AuditLog {
 	@Column(name = "response_status")
 	private String responseStatus;
 
+	@Column(name = "reason")
+	private String reason;
+
 	@Column(name = "modified_timestamp")
 	private Timestamp timeStamp;
 
 	@Column(name = "median_uuid")
 	private String medianUuid;
-	
+
 	@Column(columnDefinition = "text", name = "original_request", length = 10000)
 	private String original_request;
 
@@ -181,9 +184,17 @@ public class AuditLog {
 		this.modified_response_splitted = modified_response_splitted;
 	}
 
+	public String getReason() {
+		return reason;
+	}
+
+	public void setReason(String reason) {
+		this.reason = reason;
+	}
+
 	@Override
 	public String toString() {
-		return "[id=" + id + ", externalSystemName=" + externalSystemName + ", ipAddress=" + ipAddress
+		return "[id=" + id + ", reason=" + reason +", externalSystemName=" + externalSystemName + ", ipAddress=" + ipAddress
 				+ ", requestStatus=" + requestStatus + ", responseStatus=" + responseStatus + ", timeStamp=" + timeStamp
 				+ ", medianUuid=" + medianUuid + ", original_request=" + original_request + ", modified_request_isomsg="
 				+ modified_request_isomsg + ", original_response_isomsg=" + original_response_isomsg
